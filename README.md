@@ -12,3 +12,6 @@ python content-generator.py input.csv
 ```
 
 See `input_example.csv` and `output_example.csv` for formatting examples.
+
+
+<embed type="video/webm" src="images/content-generator-recording.mov"/>
