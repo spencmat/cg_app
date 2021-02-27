@@ -12,9 +12,6 @@ import csv
 import subprocess
 import re
 
-# Location of life-generator.py
-LG_APP_DIR = '/Users/spencer/Documents/lg_app'
-
 
 # CG Service provides the get_content function that fetches content from wikipedia
 # and matches paragraphs against keywords.
@@ -85,8 +82,8 @@ class ContentGeneratorService:
 # Life Generator Service provides the query function that fetches results from life generator
 # and matches paragraphs against keywords.
 class LifeGeneratorService:
-	def __init__(self, lg_app_dir):
-		self.lg_app_dir = lg_app_dir
+	def __init__(self, _lg_app_dir):
+		self.lg_app_dir = _lg_app_dir
 
 	def _write_input_csv(self, toy_category, result_number):
 		# Write input.csv file, with headers & 1 line.
@@ -161,11 +158,11 @@ class LifeGeneratorService:
 # Tkinter App Class for Life Content Generator
 class LifeContentGeneratorApp(tk.Frame):
 
-	def __init__(self, parent, *args, **kwargs):
+	def __init__(self, parent, _lg_app_dir, *args, **kwargs):
 		tk.Frame.__init__(self, parent, *args, **kwargs)
 		self.parent = parent
 		self.parent.title("Life Content Generator")
-		self.life_gen_service = LifeGeneratorService(LG_APP_DIR)
+		self.life_gen_service = LifeGeneratorService(_lg_app_dir)
 		self.categories = self.life_gen_service.get_categories()
 		self.content_gen_service = ContentGeneratorService()
 
@@ -344,9 +341,10 @@ if __name__ == "__main__":
 		window.mainloop()
 
 	# If the --life-content-generator parameter is present, run the Life Content Generator GUI App.
-	elif len(sys.argv) == 2 and (sys.argv[1] == "--life-content-generator"):
+	elif len(sys.argv) == 2 and ("--life-content-generator=" in sys.argv[1]):
 		window = tk.Tk()
-		LifeContentGeneratorApp(window).pack(expand=True)
+		lg_app_dir = sys.argv[1].split('=')[1]
+		LifeContentGeneratorApp(window, lg_app_dir).pack(expand=True)
 		window.mainloop()
 
 	# If an input csv file is included, process file. (No input file validation performed)
@@ -369,4 +367,4 @@ if __name__ == "__main__":
 	else:
 		print("Usage: python content-generator.py")
 		print("       python content-generator.py input.csv")
-		print("       python content-generator.py --life-content-generator")
+		print("       python content-generator.py --life-content-generator=/directory/for/life_generator_app")
