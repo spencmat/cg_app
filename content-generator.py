@@ -1,7 +1,7 @@
 # Content-Generator.py
 # SOFTWARE ENGINEERING I (CS_361_400_W2021) Assignment 3
 # Author: Matthew Spencer
-# Date: Feb 14, 2021
+# Date: Feb 27, 2021
 
 import sys
 import textwrap
@@ -11,6 +11,9 @@ from bs4 import BeautifulSoup
 import csv
 import subprocess
 import re
+
+# Location of life-generator.py
+LG_APP_DIR = '/Users/spencer/Documents/lg_app'
 
 
 # CG Service provides the get_content function that fetches content from wikipedia
@@ -23,8 +26,7 @@ class ContentGeneratorService:
 		if fetch_error:
 			wiki_page_paragraph = wiki_page_content
 		else:
-			wiki_page_paragraph, paragraph_error = self.get_keywords_paragraph(wiki_page_content,
-																			   primary, secondary)
+			wiki_page_paragraph, paragraph_error = self.get_keywords_paragraph(wiki_page_content, primary, secondary)
 		return wiki_page_paragraph
 
 	def get_content_from_list(self, keywords):
@@ -163,7 +165,7 @@ class LifeContentGeneratorApp(tk.Frame):
 		tk.Frame.__init__(self, parent, *args, **kwargs)
 		self.parent = parent
 		self.parent.title("Life Content Generator")
-		self.life_gen_service = LifeGeneratorService('/Users/spencer/Documents/lg_app')
+		self.life_gen_service = LifeGeneratorService(LG_APP_DIR)
 		self.categories = self.life_gen_service.get_categories()
 		self.content_gen_service = ContentGeneratorService()
 
