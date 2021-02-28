@@ -333,13 +333,17 @@ class ContentGeneratorApp(tk.Frame):
 
 
 def write_output_file(output_rows):
-    with open('content-output.csv', mode='w') as output_csv:
+    with open('content-output.csv', mode='w', newline='') as output_csv:
         fieldnames = ['input_keywords', 'output_content']
         output_csv_writer = csv.DictWriter(output_csv, fieldnames=fieldnames, delimiter=',',
-                                           quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                                           quotechar='"', quoting=csv.QUOTE_MINIMAL,
+                                           lineterminator=os.linesep)
         output_csv_writer.writeheader()
         for row in output_rows:
             output_csv_writer.writerow(row)
+
+
+# def run_content_gen_app():
 
 
 if __name__ == "__main__":
