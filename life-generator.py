@@ -14,7 +14,7 @@ master_teammate = []
 
 def write_categires_csv():
     f = open("output.csv", "w")
-    f.write("catagories\n")
+    f.write("categories\n")
     for i in master_category:
         f.write(i + "\n")
 
@@ -170,7 +170,7 @@ if len(sys.argv) <= 1:
 
 else:
 
-    if filename == "--catagories":
+    if filename == "--categories":
         write_categires_csv()
         exit()
     else:
