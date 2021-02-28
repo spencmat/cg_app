@@ -42,7 +42,7 @@ def file_out(out_type, out_num, out_category):
 
 #below is to open teammated file. If not present it will just open like normal.
 try:
-    with open('output_example.csv', 'r', encoding="utf-8") as csv_file:
+    with open('content-output.csv', 'r', encoding="utf-8") as csv_file:
         teammate_csv_data = csv.reader(csv_file)
         for read_line in teammate_csv_data:
             if read_line != ['input_keywords', 'output_content']:
