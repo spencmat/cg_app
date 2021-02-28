@@ -13,14 +13,15 @@ display_list = []
 master_teammate = []
 
 def write_categires_csv():
-    f = open("output.csv", "w")
-    f.write("categories\n")
+    f = open("life-output.csv", "w")
+    f.write("catageries\n")
     for i in master_category:
         f.write(i + "\n")
+    f.close()
 
 
 def file_out(out_type, out_num, out_category):
-    f = open("output.csv", "w")
+    f = open("life-output.csv", "w")
     f.write("input_item_type,input_item_category,input_number_to_generate,output_item_name,output_item_rating,output_item_num_reviews\n")
 
     for j in range(0, len(display_list)):
@@ -115,8 +116,9 @@ if len(sys.argv) <= 1:
                 else:
                     outputText.insert(tk.INSERT, display_list[i][0] + "\t " + display_list[i][1] + " \t" + display_list[i][2] + " \t" + display_list[i][3] + "\n\n")
                     for j in range(0, len(master_teammate)):
-                        if master_teammate[j][0] in display_list[i][0] or master_teammate[j][1] in display_list[i][0]:
-                            outputText.insert(tk.INSERT, "--MORE INFO: " + master_teammate[j][2] + "\n\n")
+                        if (master_teammate[j][0] in display_list[i][0] or master_teammate[j][1] in display_list[i][0]) and len(master_teammate[j]) > 2:
+                            if master_teammate[j][2] != "":
+                                outputText.insert(tk.INSERT, "--MORE INFO: " + master_teammate[j][2] + "\n\n")
 
 
             outputText.config(state="disabled")
