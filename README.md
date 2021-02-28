@@ -11,7 +11,12 @@ To use the CLI:
 python content-generator.py input.csv 
 ```
 
-To use the Life Content Generator (Integration with Life Generator service), you will need to specify the `--life-content-generator` parameter with the location of `life-generator.py` directory. 
+To use the Life Content Generator (Integration with Life Generator service), you will need to specify the `--life-content-generator` parameter. `life-generator.py` and its requirements need to be in the same directory.
+```
+python content-generator.py --life-content-generator
+```
+
+If life-generator.py is in a different directory, you can specify the location.
 ```
 python content-generator.py --life-content-generator=/Users/spencer/Documents/lg_app
 ```

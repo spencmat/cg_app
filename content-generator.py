@@ -381,4 +381,5 @@ if __name__ == "__main__":
     else:
         print("Usage: python content-generator.py")
         print("       python content-generator.py input.csv")
+        print("       python content-generator.py --life-content-generator")
         print("       python content-generator.py --life-content-generator=/dir/for/life_gen_app")
