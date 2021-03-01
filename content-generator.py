@@ -60,6 +60,7 @@ class ContentGeneratorService:
         r = requests.get(url)
         if r.status_code != 200:
             print(f"Keyword: {keyword} did not return a HTTP 200 Status. Received:{r.status_code}")
+            self.wiki_cache[keyword] = ""
             return '', True
         else:
             self.wiki_cache[keyword] = r.text
@@ -118,7 +119,7 @@ class LifeGeneratorService:
     def get_life(self, toy_category, result_number):
         # Set input for life generator service
         self._write_input_csv(toy_category, result_number)
-
+        print(f"Fetching {toy_category} ({result_number} results) from Life Generator")
         # Exec life-generator.py
         args = ("python", f"{self.lg_app_dir}/life-generator.py", "input.csv")
         popen = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=f"{self.lg_app_dir}")
@@ -129,6 +130,7 @@ class LifeGeneratorService:
 
     def get_categories(self):
         # Exec life-generator.py
+        print("Fetching Categories from Life Generator")
         args = ("python", f"{self.lg_app_dir}/life-generator.py", "--categories")
         popen = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=f"{self.lg_app_dir}")
         popen.wait()
@@ -380,6 +382,7 @@ def run_content_gen_service(limit):
 def print_usage():
     print("Usage: python content-generator.py")
     print("       python content-generator.py input.csv")
+    print("       python content-generator.py input.csv --limit=1")
     print("       python content-generator.py --life-content-generator")
     print("       python content-generator.py --life-content-generator=/dir/for/life_gen_app")
 
