@@ -17,21 +17,20 @@ import os
 # CG Service provides the get_content function that fetches content from wikipedia
 # and matches paragraphs against keywords.
 class ContentGeneratorService:
-    # get content matching primary and secondary keywords, return content or error message.
-    def get_content(self, primary, secondary):
-        paragraph_error = False
-        wiki_page_content, fetch_error = self.get_wiki_page_content(primary)
+    # Get content matching primary and secondary keywords, return content or error message.
+    def get_content(self, primary_keyword, secondary_keyword):
+        wiki_page_content, fetch_error = self.get_wiki_page_content(primary_keyword)
         if fetch_error:
             wiki_page_paragraph = wiki_page_content
         else:
-            wiki_page_paragraph, paragraph_error = self.get_keywords_paragraph(wiki_page_content,
-                                                                               primary, secondary)
+            wiki_page_paragraph, _ = self.get_keywords_paragraph(
+                    wiki_page_content, primary_keyword, secondary_keyword)
         return wiki_page_paragraph
 
     def get_content_from_list(self, keywords):
         paragraph = ''
-        primary = ''
-        secondary = ''
+        primary_keyword = ''
+        secondary_keyword = ''
         paragraph_found = False
         for wiki_page_keyword in keywords:
             if paragraph_found:
@@ -42,14 +41,14 @@ class ContentGeneratorService:
                 for keyword in keywords:
                     if keyword != wiki_page_keyword:
                         paragraph, search_err = self.get_keywords_paragraph(
-                            page_html,  wiki_page_keyword,  keyword)
+                            page_html, wiki_page_keyword,  keyword)
                         if not search_err:
-                            primary = wiki_page_keyword
-                            secondary = keyword
+                            primary_keyword = wiki_page_keyword
+                            secondary_keyword = keyword
                             paragraph_found = True
                             break
 
-        return paragraph, primary, secondary, (not paragraph_found)
+        return paragraph, primary_keyword, secondary_keyword, (not paragraph_found)
 
     # Perform HTTP call to get page from Wikidpedia. Return content or error message
     @staticmethod
@@ -88,7 +87,7 @@ class LifeGeneratorService:
     def __init__(self, _lg_app_dir):
         self.lg_app_dir = _lg_app_dir
 
-    # Write input.csv file, with headers & 1 line, for life generator input.
+    # Write input.csv file, with headers and one line of values for life generator input.
     def _write_input_csv(self, toy_category, result_number):
         with open(f"{self.lg_app_dir}/input.csv", mode='w') as lg_input_csv:
             fieldnames = ['input_item_type', 'input_item_category', 'input_number_to_generate']
@@ -131,7 +130,7 @@ class LifeGeneratorService:
         popen = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=f"{self.lg_app_dir}")
         popen.wait()
 
-        # return array of results read from output.csv (normalize categories)
+        # Return array of results read from life-output.csv (normalize categories)
         categories = []
         categories_list = self._read_output_csv()
         for category in categories_list:
@@ -165,9 +164,8 @@ class LifeGeneratorService:
 
 # Tkinter App Class for Life Content Generator
 class LifeContentGeneratorApp(tk.Frame):
-
-    def __init__(self, parent, _lg_app_dir, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
+    def __init__(self, parent, _lg_app_dir):
+        tk.Frame.__init__(self, parent)
         self.parent = parent
         self.parent.title("Life Content Generator")
         self.life_gen_service = LifeGeneratorService(_lg_app_dir)
@@ -184,7 +182,7 @@ class LifeContentGeneratorApp(tk.Frame):
         keyword_ent_y = 10
 
         # Render the modified Life Content Generator App layout
-        # create the option drop down
+        # Create the option drop down
         self.lbl_categories = tk.Label(master=self.frame, text="Category Filter")
         self.lbl_categories.place(x=keyword_label_x, y=keyword_label_y)
 
@@ -234,14 +232,13 @@ class LifeContentGeneratorApp(tk.Frame):
 
         self.txt_life.config(state=tk.NORMAL)
         self.txt_life.delete("1.0", tk.END)
-        # self.txt_life.insert(tk.END, '\n'.join(textwrap.wrap(life_results_text, 84)))
         self.txt_life.insert(tk.END, life_results_text)
         self.txt_life.config(state=tk.DISABLED)
 
-        paragraph, primary, secondary, par_err = self.content_gen_service.get_content_from_list(
-                life_keywords)
+        paragraph, primary_keyword, secondary_keyword, _ = \
+            self.content_gen_service.get_content_from_list(life_keywords)
 
-        output_rows = [dict({'input_keywords': f"{primary};{secondary}",
+        output_rows = [dict({'input_keywords': f"{primary_keyword};{secondary_keyword}",
                              'output_content': paragraph})]
         write_output_file(output_rows)
         self.txt_content.config(state=tk.NORMAL)
@@ -263,8 +260,8 @@ class LifeContentGeneratorApp(tk.Frame):
 # Tkinter App Class for Content Generator
 class ContentGeneratorApp(tk.Frame):
 
-    def __init__(self, parent, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
+    def __init__(self, parent):
+        tk.Frame.__init__(self, parent)
         self.parent = parent
         self.parent.title("Content Generator")
 
@@ -279,7 +276,7 @@ class ContentGeneratorApp(tk.Frame):
 
         # Render the original Content Generator App layout
         # Primary Keyword
-        self.lbl_primary = tk.Label(master=self.frame, text="Primary Keyword:")
+        self.lbl_primary = tk.Label(master=self.frame, text="Primary Keyword")
         self.lbl_primary.place(x=keyword_label_x, y=keyword_label_y)
 
         self.ent_primary = tk.Entry(master=self.frame, width=20)
@@ -287,7 +284,7 @@ class ContentGeneratorApp(tk.Frame):
         self.ent_primary.bind("<KeyRelease>", self.validate_keywords_populated)
 
         # Secondary Keyword
-        self.lbl_secondary = tk.Label(master=self.frame, text="Secondary Keyword:")
+        self.lbl_secondary = tk.Label(master=self.frame, text="Secondary Keyword")
         self.lbl_secondary.place(x=keyword_label_x, y=keyword_label_y + 30)
 
         self.ent_secondary = tk.Entry(master=self.frame, width=20)
@@ -309,12 +306,12 @@ class ContentGeneratorApp(tk.Frame):
 
     # Get keyword entry values, fetch the content, insert it into the output textbox
     def submit(self):
-        primary = self.ent_primary.get()
-        secondary = self.ent_secondary.get()
+        primary_keyword = self.ent_primary.get()
+        secondary_keyword = self.ent_secondary.get()
         gui_cg_service = ContentGeneratorService()
-        paragraph = gui_cg_service.get_content(primary, secondary)
+        paragraph = gui_cg_service.get_content(primary_keyword, secondary_keyword)
 
-        keywords = f"{primary};{secondary}"
+        keywords = f"{primary_keyword};{secondary_keyword}"
         output_rows = [dict({'input_keywords': keywords, 'output_content': paragraph})]
         write_output_file(output_rows)
         self.txt_box.config(state=tk.NORMAL)
@@ -343,47 +340,63 @@ def write_output_file(output_rows):
             output_csv_writer.writerow(row)
 
 
-# def run_content_gen_app():
+def run_content_gen_app():
+    window = tk.Tk()
+    ContentGeneratorApp(window).pack(expand=True)
+    window.mainloop()
 
 
-if __name__ == "__main__":
+def run_life_content_gen_app(lg_app_dir):
+    window = tk.Tk()
+    LifeContentGeneratorApp(window, lg_app_dir).pack(expand=True)
+    window.mainloop()
 
+
+def run_content_gen_service():
+    cg_service = ContentGeneratorService()
+    outputs = []
+    with open(sys.argv[1]) as input_csv:
+        input_csv_reader = csv.reader(input_csv, delimiter=',')
+        line_count = 0
+        for row in input_csv_reader:
+            line_count += 1
+            if line_count > 1:
+                keyword1, keyword2 = row[0].split(';')
+                content = cg_service.get_content(keyword1, keyword2)
+                outputs.append(dict({'input_keywords': row[0], 'output_content': content}))
+
+    write_output_file(outputs)
+
+
+def print_usage():
+    print("Usage: python content-generator.py")
+    print("       python content-generator.py input.csv")
+    print("       python content-generator.py --life-content-generator")
+    print("       python content-generator.py --life-content-generator=/dir/for/life_gen_app")
+
+
+def main():
     # If no input file or parameters are specified, run the Content Generator GUI App.
     if len(sys.argv) == 1:
-        window = tk.Tk()
-        ContentGeneratorApp(window).pack(expand=True)
-        window.mainloop()
+        run_content_gen_app()
 
     # If the --life-content-generator parameter is present, run the Life Content Generator GUI App.
     elif len(sys.argv) == 2 and ("--life-content-generator" in sys.argv[1]):
-        window = tk.Tk()
+        # Set lg_app_dir as the current directory, unless it has been specified in the parameter.
         lg_app_dir = os.path.dirname(os.path.realpath(__file__))
         lg_app_arg = sys.argv[1].split('=')
         if len(lg_app_arg) == 2:
             lg_app_dir = lg_app_arg[1]
-
-        LifeContentGeneratorApp(window, lg_app_dir).pack(expand=True)
-        window.mainloop()
+        run_life_content_gen_app(lg_app_dir)
 
     # If an input csv file is included, process file. (No input file validation performed)
     elif len(sys.argv) == 2 and (sys.argv[1][-4:] == ".csv"):
-        cg_service = ContentGeneratorService()
-        outputs = []
-        with open(sys.argv[1]) as input_csv:
-            input_csv_reader = csv.reader(input_csv, delimiter=',')
-            line_count = 0
-            for row in input_csv_reader:
-                line_count += 1
-                if line_count > 1:
-                    keyword1, keyword2 = row[0].split(';')
-                    content = cg_service.get_content(keyword1, keyword2)
-                    outputs.append(dict({'input_keywords': row[0], 'output_content': content}))
-
-        write_output_file(outputs)
+        run_content_gen_service()
 
     # If we get here, we haven't matched on valid parameters. Print usage text.
     else:
-        print("Usage: python content-generator.py")
-        print("       python content-generator.py input.csv")
-        print("       python content-generator.py --life-content-generator")
-        print("       python content-generator.py --life-content-generator=/dir/for/life_gen_app")
+        print_usage()
+
+
+if __name__ == "__main__":
+    main()
