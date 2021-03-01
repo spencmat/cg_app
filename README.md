@@ -14,9 +14,14 @@ To use the GUI:
 python content-generator.py
 ```
 
-To use the CLI:
+To use the CLI (Using Content Generator as a Service):
 ```
 python content-generator.py input.csv 
+```
+
+Specify the limit of results:
+```
+python content-generator.py input.csv --limit=1
 ```
 
 ## Running Content Generator with Life Generator Service 

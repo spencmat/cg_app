@@ -15,8 +15,11 @@ import os
 
 
 # CG Service provides the get_content function that fetches content from wikipedia
-# and matches paragraphs against keywords.
+# and matches paragraphs against keywords. if result_count = 0, then its unlimited results.
 class ContentGeneratorService:
+    def __init__(self):
+        self.wiki_cache = dict({})
+
     # Get content matching primary and secondary keywords, return content or error message.
     def get_content(self, primary_keyword, secondary_keyword):
         wiki_page_content, fetch_error = self.get_wiki_page_content(primary_keyword)
@@ -36,23 +39,22 @@ class ContentGeneratorService:
             if paragraph_found:
                 break
 
-            page_html, fetch_err = self.get_wiki_page_content(wiki_page_keyword)
-            if not fetch_err:
-                for keyword in keywords:
-                    if keyword != wiki_page_keyword:
-                        paragraph, search_err = self.get_keywords_paragraph(
-                            page_html, wiki_page_keyword,  keyword)
-                        if not search_err:
-                            primary_keyword = wiki_page_keyword
-                            secondary_keyword = keyword
-                            paragraph_found = True
-                            break
+            for keyword in keywords:
+                if keyword != wiki_page_keyword:
+                    paragraph = self.get_content(wiki_page_keyword, keyword)
+                    if len(paragraph) > 0:
+                        primary_keyword = wiki_page_keyword
+                        secondary_keyword = keyword
+                        paragraph_found = True
+                        break
 
         return paragraph, primary_keyword, secondary_keyword, (not paragraph_found)
 
     # Perform HTTP call to get page from Wikidpedia. Return content or error message
-    @staticmethod
-    def get_wiki_page_content(keyword):
+    def get_wiki_page_content(self, keyword):
+        if keyword in self.wiki_cache:
+            return self.wiki_cache[keyword], False
+
         print(f"getting wiki page for: {keyword}")
         url = f"https://en.wikipedia.org/wiki/{keyword}"
         r = requests.get(url)
@@ -60,6 +62,7 @@ class ContentGeneratorService:
             print(f"Keyword: {keyword} did not return a HTTP 200 Status. Received:{r.status_code}")
             return '', True
         else:
+            self.wiki_cache[keyword] = r.text
             return r.text, False
 
     @staticmethod
@@ -117,7 +120,7 @@ class LifeGeneratorService:
         self._write_input_csv(toy_category, result_number)
 
         # Exec life-generator.py
-        args = ("python3.9", f"{self.lg_app_dir}/life-generator.py", "input.csv")
+        args = ("python", f"{self.lg_app_dir}/life-generator.py", "input.csv")
         popen = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=f"{self.lg_app_dir}")
         popen.wait()
 
@@ -126,7 +129,7 @@ class LifeGeneratorService:
 
     def get_categories(self):
         # Exec life-generator.py
-        args = ("python3.9", f"{self.lg_app_dir}/life-generator.py", "--categories")
+        args = ("python", f"{self.lg_app_dir}/life-generator.py", "--categories")
         popen = subprocess.Popen(args, stdout=subprocess.PIPE, cwd=f"{self.lg_app_dir}")
         popen.wait()
 
@@ -151,7 +154,6 @@ class LifeGeneratorService:
                         'underneath', 'unlike', 'until', 'up', 'upon', 'versus', 'via', 'with',
                         'within', 'without', 'a', 'the']
         keywords = set()
-        print(life_results)
         for result in life_results:
             description = result[3]
             for word in description.split():
@@ -352,9 +354,10 @@ def run_life_content_gen_app(lg_app_dir):
     window.mainloop()
 
 
-def run_content_gen_service():
+def run_content_gen_service(limit):
     cg_service = ContentGeneratorService()
     outputs = []
+    result_count = 0
     with open(sys.argv[1]) as input_csv:
         input_csv_reader = csv.reader(input_csv, delimiter=',')
         line_count = 0
@@ -363,7 +366,13 @@ def run_content_gen_service():
             if line_count > 1:
                 keyword1, keyword2 = row[0].split(';')
                 content = cg_service.get_content(keyword1, keyword2)
-                outputs.append(dict({'input_keywords': row[0], 'output_content': content}))
+                if limit == 0:
+                    outputs.append(dict({'input_keywords': row[0], 'output_content': content}))
+                elif result_count <= limit and len(content) > 0:
+                    result_count = result_count + 1
+                    outputs.append(dict({'input_keywords': row[0], 'output_content': content}))
+                if limit > 0 and result_count >= limit:
+                    break
 
     write_output_file(outputs)
 
@@ -390,8 +399,11 @@ def main():
         run_life_content_gen_app(lg_app_dir)
 
     # If an input csv file is included, process file. (No input file validation performed)
-    elif len(sys.argv) == 2 and (sys.argv[1][-4:] == ".csv"):
-        run_content_gen_service()
+    elif len(sys.argv) >= 2 and (sys.argv[1][-4:] == ".csv"):
+        limit = 0
+        if len(sys.argv) == 3 and '--limit=' in sys.argv[2]:
+            limit = int(sys.argv[2].split('=')[1])
+        run_content_gen_service(limit)
 
     # If we get here, we haven't matched on valid parameters. Print usage text.
     else:
